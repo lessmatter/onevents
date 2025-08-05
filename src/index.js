@@ -33,14 +33,7 @@ const validEvents = [
   "animationend", "transitionend"
 ];
 
-/**
- * Helper function to check if event name is valid
- * @param {string} name - Event name to validate
- * @returns {boolean} True if event name is valid
- */
-function isValidEventName(name) {
-  return validEvents.includes(name);
-}
+
 
 /**
  * Registers event handlers for DOM events with delegation support using HTML attributes.
@@ -85,7 +78,7 @@ export default function onEvents({
       if (attr.name.startsWith("on-")) {
         const type = attr.name.slice(3);
         // Runtime check to ensure event is allowed
-        if (isValidEventName(type)) {
+        if (validEvents.includes(type)) {
           usedEvents.add(type);
         }
       }
