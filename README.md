@@ -2,6 +2,10 @@
 
 Lightweight event delegation library for DOM events using HTML attributes.
 
+> **⚠️ Alpha Version**  
+> This library is currently in alpha and being used internally by Less Matter for testing.  
+> Breaking changes may occur in future versions.
+
 ## Installation
 
 ```bash
