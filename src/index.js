@@ -33,8 +33,6 @@ const validEvents = [
   "animationend", "transitionend"
 ];
 
-
-
 /**
  * Registers event handlers for DOM events with delegation support using HTML attributes.
  * 
