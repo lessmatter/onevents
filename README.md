@@ -1,4 +1,4 @@
-# onEvents
+# onEvents by Less Matter
 
 Lightweight event delegation library for DOM events using HTML attributes.
 
@@ -8,66 +8,71 @@ Lightweight event delegation library for DOM events using HTML attributes.
 
 ## Installation
 
-```bash
-npm install @lessmatter/onevents
+Import directly from GitHub:
+
+```html
+<script type="module">
+  import onEvents from 'https://raw.githubusercontent.com/lessmatter/onevents/main/src/index.js';
+</script>
 ```
 
 ## Usage
 
-### 1. Define your action functions
-
-```typescript
-import onEvents from '@lessmatter/onevents';
-
-function handleClick(params) {
-  console.log('Button clicked!', params.event, params.element);
-}
-
-function handleSubmit(params) {
-  params.event.preventDefault();
-  console.log('Form submitted!');
-}
-
-function handleMouseEnter(params) {
-  params.element.style.backgroundColor = 'lightblue';
-}
-
-// Initialize event delegation
-const destroy = onEvents({ 
-  actions: { handleClick, handleSubmit, handleMouseEnter }
-});
-```
-
-### 2. Use in HTML
+### Complete Example
 
 ```html
-<button on-click="handleClick">Click me</button>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>onEvents Example</title>
+</head>
+<body>
+    <button on-click="handleClick">Click me</button>
 
-<form on-submit="handleSubmit">
-  <input type="text" />
-  <button type="submit">Submit</button>
-</form>
+    <form on-submit="handleSubmit">
+      <input type="text" />
+      <button type="submit">Submit</button>
+    </form>
 
-<div on-mouseenter="handleMouseEnter" class="card">
-  Hover over me
-</div>
+    <div on-mouseenter="handleMouseEnter" class="card">
+      Hover over me
+    </div>
+
+    <script type="module">
+        import onEvents from 'https://raw.githubusercontent.com/lessmatter/onevents/main/src/index.js';
+        
+        function handleClick(params) {
+            console.log('Button clicked!', params.event, params.element);
+        }
+        
+        function handleSubmit(params) {
+            params.event.preventDefault();
+            console.log('Form submitted!');
+        }
+        
+        function handleMouseEnter(params) {
+            params.element.style.backgroundColor = 'lightblue';
+        }
+        
+        const destroyEvents = onEvents({ 
+            actions: { handleClick, handleSubmit, handleMouseEnter }
+        });
+        
+        // Later, to remove all event listeners:
+        // destroyEvents();
+    </script>
+</body>
+</html>
 ```
 
-### 3. Cleanup (optional)
-
-```typescript
-// Remove all event listeners
-destroy();
-```
-
-### 4. Dynamic Content (Advanced)
+### 2. Dynamic Content (Advanced)
 
 If you have elements that are added to the DOM dynamically (after the initial page load), you can preload event types:
 
-```typescript
+```javascript
 // Preload events for dynamic content
-const destroy = onEvents({ 
-  actions,
+const destroyEvents = onEvents({ 
+  actions: { handleClick, handleSubmit, handleMouseEnter },
   preloadEvents: ['click', 'submit', 'mouseenter'] 
 });
 
@@ -76,16 +81,16 @@ document.body.innerHTML += '<button on-click="handleClick">Dynamic Button</butto
 // This button will work immediately without needing to reinitialize onEvents
 ```
 
-### 5. Scoped Events (Advanced)
+### 3. Scoped Events (Advanced)
 
 You can limit event listening to a specific container element:
 
-```typescript
+```javascript
 // Get a specific container
 const sidebar = document.querySelector('.sidebar');
 
 // Initialize events only for the sidebar
-const destroySidebar = onEvents({ 
+const destroySidebarEvents = onEvents({ 
   actions: { handleClick, handleMouseEnter },
   root: sidebar
 });
@@ -96,14 +101,9 @@ const destroySidebar = onEvents({
 // </div>
 ```
 
-```typescript
-// Remove all event listeners
-destroy();
-```
-
 ## API
 
-### onEvents(options: OnEventsOptions): () => void
+### onEvents(options): () => void
 
 Registers event handlers for DOM events with delegation support using HTML attributes.
 
