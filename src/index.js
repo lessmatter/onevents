@@ -9,7 +9,7 @@
  */
 
 /**
- * @typedef {'click'|'dblclick'|'mousedown'|'mouseup'|'submit'|'input'|'change'|'focus'|'blur'|'reset'|'invalid'|'keydown'|'keyup'|'keypress'|'mouseenter'|'mouseleave'|'mouseover'|'mouseout'|'mousemove'|'contextmenu'|'touchstart'|'touchend'|'touchmove'|'scroll'|'wheel'|'resize'|'load'|'DOMContentLoaded'|'beforeunload'|'error'|'abort'|'loadstart'|'progress'|'timeout'|'loadend'|'play'|'pause'|'ended'|'volumechange'|'seeking'|'animationend'|'transitionend'} EventName
+ * @typedef {'click'|'dblclick'|'mousedown'|'mouseup'|'submit'|'input'|'change'|'focus'|'blur'|'focusin'|'focusout'|'reset'|'invalid'|'keydown'|'keyup'|'keypress'|'mouseenter'|'mouseleave'|'mouseover'|'mouseout'|'mousemove'|'contextmenu'|'touchstart'|'touchend'|'touchmove'|'scroll'|'wheel'|'resize'|'load'|'DOMContentLoaded'|'beforeunload'|'error'|'abort'|'loadstart'|'progress'|'timeout'|'loadend'|'play'|'pause'|'ended'|'volumechange'|'seeking'|'animationend'|'transitionend'} EventName
  */
 
 /**
@@ -25,13 +25,45 @@
  */
 const validEvents = [
   "click", "dblclick", "mousedown", "mouseup", "submit", "input", "change",
-  "focus", "blur", "reset", "invalid", "keydown", "keyup", "keypress",
+  "focus", "blur", "focusin", "focusout", "reset", "invalid", "keydown", "keyup", "keypress",
   "mouseenter", "mouseleave", "mouseover", "mouseout", "mousemove", "contextmenu",
   "touchstart", "touchend", "touchmove", "scroll", "wheel", "resize", "load",
   "DOMContentLoaded", "beforeunload", "error", "abort", "loadstart", "progress",
   "timeout", "loadend", "play", "pause", "ended", "volumechange", "seeking",
   "animationend", "transitionend"
 ];
+
+/**
+ * Events that cannot be delegated reliably from a container.
+ * These either do not bubble and cannot be captured at the container level,
+ * or are lifecycle/window-level events that won't reach the provided root.
+ * They will be skipped with a warning.
+ */
+const nonDelegableEvents = new Set([
+  "scroll",
+  "resize",
+  "load",
+  "beforeunload",
+  "error",
+  "abort",
+  "DOMContentLoaded",
+]);
+
+/**
+ * Map certain events to alternative listener types that support delegation.
+ * focus/blur do not bubble, but focusin/focusout do.
+ */
+const eventListenerTypeMap = /** @type {Record<string, string>} */ ({
+  focus: "focusin",
+  blur: "focusout",
+  mouseenter: "mouseover",
+  mouseleave: "mouseout",
+});
+
+/**
+ * Events where passive listeners are beneficial to avoid blocking scrolling.
+ */
+const passiveEvents = new Set(["touchstart", "touchmove", "wheel"]);
 
 /**
  * Registers event handlers for DOM events with delegation support using HTML attributes.
@@ -84,10 +116,28 @@ export default function onEvents({
   });
 
   Array.from(usedEvents).forEach((type) => {
+    if (nonDelegableEvents.has(type)) {
+      console.warn(
+        `onEvents: Skipping non-delegable event '${type}'. Use a bubbling alternative or attach a direct listener.`
+      );
+      return;
+    }
+
+    const listenerType = eventListenerTypeMap[type] || type;
+
     const handler = function (event) {
-      const target = event.target;
-      const element = target?.closest(`[on-${type}]`);
+      const path = typeof event.composedPath === "function" ? event.composedPath() : null;
+      const start = Array.isArray(path) && path.length > 0 ? path[0] : event.target;
+      const element = start instanceof Element ? start.closest(`[on-${type}]`) : null;
       if (!element || !root.contains(element)) return;
+
+      // Emulate mouseenter/mouseleave semantics using mouseover/mouseout
+      if ((type === "mouseenter" || type === "mouseleave") && element) {
+        const related = /** @type {Node|null|undefined} */ (event.relatedTarget);
+        if (related && element.contains(related)) {
+          return;
+        }
+      }
 
       const fnName = element.getAttribute(`on-${type}`);
       const fn = fnName && actions[fnName];
@@ -101,8 +151,9 @@ export default function onEvents({
       }
     };
 
-    root.addEventListener(type, handler);
-    listeners.push({ type, handler });
+    const options = passiveEvents.has(listenerType) ? { passive: true } : false;
+    root.addEventListener(listenerType, handler, options);
+    listeners.push({ type: listenerType, handler });
   });
 
   return function destroy() {

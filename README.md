@@ -8,11 +8,11 @@ Lightweight event delegation library for DOM events using HTML attributes.
 
 ## Installation
 
-Import directly from GitHub:
+Import directly via jsDelivr (recommended for alpha):
 
 ```html
 <script type="module">
-  import onEvents from 'https://raw.githubusercontent.com/lessmatter/onevents/main/src/index.js';
+  import onEvents from 'https://cdn.jsdelivr.net/gh/lessmatter/onevents@main/src/index.js';
 </script>
 ```
 
@@ -34,12 +34,12 @@ Import directly from GitHub:
       <button type="submit">Submit</button>
     </form>
 
-    <div on-mouseenter="handleMouseEnter" class="card">
+    <div on-mouseover="handleMouseOver" class="card">
       Hover over me
     </div>
 
     <script type="module">
-        import onEvents from 'https://raw.githubusercontent.com/lessmatter/onevents/main/src/index.js';
+        import onEvents from 'https://cdn.jsdelivr.net/gh/lessmatter/onevents@main/src/index.js';
         
         function handleClick(params) {
             console.log('Button clicked!', params.event, params.element);
@@ -50,12 +50,12 @@ Import directly from GitHub:
             console.log('Form submitted!');
         }
         
-        function handleMouseEnter(params) {
+        function handleMouseOver(params) {
             params.element.style.backgroundColor = 'lightblue';
         }
         
         const destroyEvents = onEvents({ 
-            actions: { handleClick, handleSubmit, handleMouseEnter }
+            actions: { handleClick, handleSubmit, handleMouseOver }
         });
         
         // Later, to remove all event listeners:
@@ -72,8 +72,8 @@ If you have elements that are added to the DOM dynamically (after the initial pa
 ```javascript
 // Preload events for dynamic content
 const destroyEvents = onEvents({ 
-  actions: { handleClick, handleSubmit, handleMouseEnter },
-  preloadEvents: ['click', 'submit', 'mouseenter'] 
+  actions: { handleClick, handleSubmit, handleMouseOver },
+  preloadEvents: ['click', 'submit', 'mouseover'] 
 });
 
 // Later, when new elements are added:
@@ -91,7 +91,7 @@ const sidebar = document.querySelector('.sidebar');
 
 // Initialize events only for the sidebar
 const destroySidebarEvents = onEvents({ 
-  actions: { handleClick, handleMouseEnter },
+  actions: { handleClick, handleMouseOver },
   root: sidebar
 });
 
@@ -125,11 +125,17 @@ Returns a cleanup function that removes all registered event listeners.
 ## Supported Events
 
 The library supports all standard DOM events including:
-- Mouse events: `click`, `dblclick`, `mousedown`, `mouseup`, `mouseenter`, `mouseleave`, etc.
+- Mouse events: `click`, `dblclick`, `mousedown`, `mouseup`, `mouseover`, `mouseleave`, etc.
 - Form events: `submit`, `input`, `change`, `focus`, `blur`, `reset`, `invalid`
 - Keyboard events: `keydown`, `keyup`, `keypress`
 - Touch events: `touchstart`, `touchend`, `touchmove`
 - And many more...
+
+## Notes
+
+- Mouse enter/leave: `on-mouseenter` and `on-mouseleave` are supported. Under the hood they are mapped to `mouseover`/`mouseout` and filtered using `relatedTarget` to emulate native semantics (no firing when moving between descendants).
+- Some events do not delegate reliably from a container and are skipped: `scroll`, `resize`, `load`, `beforeunload`, `error`, `abort`, `DOMContentLoaded`.
+- Focus handling: you can use either `on-focus`/`on-blur` (internally mapped to `focusin`/`focusout`) or directly `on-focusin`/`on-focusout`. Both work with delegation.
 
 ## License
 
