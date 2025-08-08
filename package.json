@@ -1,6 +1,6 @@
 {
   "name": "@lessmatter/onevents",
-  "version": "0.0.1-alpha.1",
+  "version": "0.0.1-alpha.2",
   "description": "Lightweight event delegation library for DOM events (alpha version)",
   "main": "src/index.js",
   "files": [
